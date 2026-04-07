@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AI Bites — Today's AI, Bite-Sized For Your Role</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0a0a0f;
+    --bg-card: #12121a;
+    --bg-card-alt: #0f0f18;
+    --accent: #6ee7b7;
+    --accent-dim: rgba(110, 231, 183, 0.15);
+    --accent-glow: rgba(110, 231, 183, 0.3);
+    --text-primary: #f0f0f5;
+    --text-secondary: #8888a0;
+    --text-muted: #55556a;
+    --border: rgba(255,255,255,0.06);
+    --role-dev: #3b82f6;
+    --role-designer: #a855f7;
+    --role-consultant: #f59e0b;
+    --role-marketer: #ec4899;
+    --role-dev-bg: rgba(59, 130, 246, 0.1);
+    --role-designer-bg: rgba(168, 85, 247, 0.1);
+    --role-consultant-bg: rgba(245, 158, 11, 0.1);
+    --role-marketer-bg: rgba(236, 72, 153, 0.1);
+  }
+
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  /* ── Onboarding Overlay ── */
+  .onboarding {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--bg-primary);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 2rem;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  .onboarding.hidden {
+    opacity: 0; transform: translateY(-30px);
+    pointer-events: none;
+  }
+
+  .onboarding-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+    letter-spacing: -1px;
+  }
+
+  .onboarding-logo span {
+    color: var(--text-primary);
+  }
+
+  .onboarding-sub {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 2.5rem;
+    text-align: center;
+    line-height: 1.5;
+    max-width: 280px;
+  }
+
+  .onboarding-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+
+  .role-buttons {
+    display: flex; flex-direction: column;
+    gap: 0.75rem; width: 100%; max-width: 320px;
+  }
+
+  .role-btn {
+    padding: 1rem 1.25rem;
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 0.75rem;
+    transition: all 0.25s ease;
+  }
+
+  .role-btn:active { transform: scale(0.97); }
+
+  .role-btn .role-icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .role-btn[data-role="dev"] .role-icon { background: var(--role-dev-bg); }
+  .role-btn[data-role="designer"] .role-icon { background: var(--role-designer-bg); }
+  .role-btn[data-role="consultant"] .role-icon { background: var(--role-consultant-bg); }
+  .role-btn[data-role="marketer"] .role-icon { background: var(--role-marketer-bg); }
+
+  .role-btn[data-role="dev"]:hover, .role-btn[data-role="dev"]:focus {
+    border-color: var(--role-dev); box-shadow: 0 0 20px rgba(59,130,246,0.1);
+  }
+  .role-btn[data-role="designer"]:hover, .role-btn[data-role="designer"]:focus {
+    border-color: var(--role-designer); box-shadow: 0 0 20px rgba(168,85,247,0.1);
+  }
+  .role-btn[data-role="consultant"]:hover, .role-btn[data-role="consultant"]:focus {
+    border-color: var(--role-consultant); box-shadow: 0 0 20px rgba(245,158,11,0.1);
+  }
+  .role-btn[data-role="marketer"]:hover, .role-btn[data-role="marketer"]:focus {
+    border-color: var(--role-marketer); box-shadow: 0 0 20px rgba(236,72,153,0.1);
+  }
+
+  .role-btn .role-meta {
+    display: flex; flex-direction: column;
+  }
+  .role-btn .role-title { font-weight: 600; }
+  .role-btn .role-desc { font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px; }
+
+  /* ── Feed Container ── */
+  .feed-container {
+    height: 100vh; height: 100dvh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .feed-scroll {
+    height: 100%;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── Header Bar ── */
+  .header {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 50;
+    padding: 0.75rem 1.25rem;
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(to bottom, var(--bg-primary) 60%, transparent);
+    pointer-events: none;
+  }
+
+  .header > * { pointer-events: auto; }
+
+  .header-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .header-logo span { color: var(--text-primary); }
+
+  .header-date {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+
+  .header-role-badge {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .header-role-badge[data-role="dev"] { background: var(--role-dev-bg); color: var(--role-dev); }
+  .header-role-badge[data-role="designer"] { background: var(--role-designer-bg); color: var(--role-designer); }
+  .header-role-badge[data-role="consultant"] { background: var(--role-consultant-bg); color: var(--role-consultant); }
+  .header-role-badge[data-role="marketer"] { background: var(--role-marketer-bg); color: var(--role-marketer); }
+
+  /* ── News Card ── */
+  .card {
+    height: 100vh; height: 100dvh;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    padding: 4.5rem 1.25rem 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute; inset: 0;
+    opacity: 0.4;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .card:nth-child(odd)::before {
+    background: radial-gradient(ellipse at 20% 20%, rgba(110, 231, 183, 0.06), transparent 60%);
+  }
+  .card:nth-child(even)::before {
+    background: radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.05), transparent 60%);
+  }
+
+  .card-content {
+    position: relative; z-index: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  .card-image {
+    position: absolute;
+    top: 0; left: -1.25rem; right: -1.25rem;
+    height: 45%;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .card-image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      transparent 20%,
+      var(--bg-primary) 100%
+    );
+  }
+
+  .card-text {
+    position: relative;
+    z-index: 1;
+  }
+
+  .card-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  .card-tag-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse-dot 2s ease infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .card-headline {
+    font-size: 1.65rem;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 0.85rem;
+    letter-spacing: -0.5px;
+  }
+
+  .card-summary {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+
+  .card-source {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 0.75rem;
+    font-family: 'Space Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .card-source-link {
+    color: var(--accent);
+    text-decoration: none;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    background: var(--accent-dim);
+    transition: background 0.2s;
+  }
+  .card-source-link:active { background: var(--accent-glow); }
+
+  /* ── Role Impact Section ── */
+  .role-impact {
+    position: relative; z-index: 1;
+    margin-top: auto;
+  }
+
+  .role-impact-toggle {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border-radius: 14px 14px 0 0;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    background: rgba(255,255,255,0.03);
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: background 0.2s;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .role-impact-toggle:active { background: rgba(255,255,255,0.06); }
+
+  .role-impact-toggle .toggle-left {
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+
+  .role-impact-toggle .role-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+  .role-impact-toggle[data-role="dev"] .role-dot { background: var(--role-dev); }
+  .role-impact-toggle[data-role="designer"] .role-dot { background: var(--role-designer); }
+  .role-impact-toggle[data-role="consultant"] .role-dot { background: var(--role-consultant); }
+  .role-impact-toggle[data-role="marketer"] .role-dot { background: var(--role-marketer); }
+
+  .toggle-arrow {
+    transition: transform 0.3s ease;
+    color: var(--text-muted);
+  }
+
+  .role-impact.open .toggle-arrow { transform: rotate(180deg); }
+
+  .role-impact-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 14px 14px;
+    background: rgba(255,255,255,0.02);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .role-impact.open .role-impact-content {
+    max-height: 300px;
+  }
+
+  .role-impact-inner {
+    padding: 1rem;
+  }
+
+  .impact-text {
+    font-size: 0.85rem;
+    line-height: 1.65;
+    color: var(--text-secondary);
+  }
+
+  .impact-action {
+    margin-top: 0.75rem;
+    padding: 0.6rem 0.85rem;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+
+  .impact-action[data-role="dev"] { background: var(--role-dev-bg); color: var(--role-dev); }
+  .impact-action[data-role="designer"] { background: var(--role-designer-bg); color: var(--role-designer); }
+  .impact-action[data-role="consultant"] { background: var(--role-consultant-bg); color: var(--role-consultant); }
+  .impact-action[data-role="marketer"] { background: var(--role-marketer-bg); color: var(--role-marketer); }
+
+  /* ── Share Button ── */
+  .share-btn {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.25rem;
+    z-index: 50;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: #25D366;
+    border: none;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+    transition: transform 0.2s;
+  }
+  .share-btn:active { transform: scale(0.9); }
+  .share-btn svg { width: 24px; height: 24px; fill: white; }
+
+  /* ── End Card ── */
+  .end-card {
+    height: 100vh; height: 100dvh;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .end-card-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+  .end-card-logo span { color: var(--text-primary); }
+
+  .end-card-msg {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    max-width: 280px;
+  }
+
+  .end-share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.9rem 1.5rem;
+    border-radius: 14px;
+    background: #25D366;
+    color: white;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .end-share-btn:active { transform: scale(0.96); }
+  .end-share-btn:hover { box-shadow: 0 0 25px rgba(37, 211, 102, 0.3); }
+
+  .end-sub {
+    margin-top: 1.5rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  /* ── Scroll Indicator ── */
+  .scroll-progress {
+    position: fixed;
+    right: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 50;
+  }
+
+  .scroll-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: all 0.3s ease;
+  }
+
+  .scroll-dot.active {
+    background: var(--accent);
+    height: 18px;
+    border-radius: 3px;
+  }
+
+  /* ── Bottom Hint ── */
+  .scroll-hint {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    animation: bounce-hint 2s ease infinite;
+    pointer-events: none;
+    transition: opacity 0.5s;
+  }
+
+  .scroll-hint.hidden { opacity: 0; }
+
+  .scroll-hint-text {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  @keyframes bounce-hint {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-6px); }
+  }
+
+  .chevron-down {
+    width: 16px; height: 16px;
+    color: var(--text-muted);
+  }
+
+  /* ── CTA Footer on last card ── */
+  .cta-footer {
+    text-align: center;
+    padding: 1.5rem;
+    position: relative; z-index: 1;
+  }
+
+  .cta-footer p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1.5rem;
+    border-radius: 12px;
+    background: var(--accent);
+    color: var(--bg-primary);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .cta-btn:active {
+    transform: scale(0.96);
+  }
+
+  .cta-btn:hover {
+    box-shadow: 0 0 30px var(--accent-glow);
+  }
+
+  /* ── Counter Badge ── */
+  .card-counter {
+    position: absolute;
+    top: 4.2rem;
+    right: 1.25rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    z-index: 2;
+  }
+
+  /* ── Desktop cap ── */
+  @media (min-width: 480px) {
+    .feed-container {
+      max-width: 430px;
+      margin: 0 auto;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+    .header {
+      max-width: 430px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .scroll-progress {
+      right: calc(50% - 215px + 10px);
+    }
+  }
+
+  /* ── Small phones (SE, older Androids) ── */
+  @media (max-height: 700px) {
+    .card {
+      padding: 4rem 1rem 1.25rem;
+    }
+    .card-image {
+      height: 35%;
+      left: -1rem; right: -1rem;
+    }
+    .card-headline {
+      font-size: 1.35rem;
+      margin-bottom: 0.5rem;
+    }
+    .card-summary {
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+    .card-tag {
+      margin-bottom: 0.6rem;
+    }
+    .card-source {
+      margin-top: 0.5rem;
+    }
+    .role-impact-toggle {
+      padding: 0.7rem 0.85rem;
+      font-size: 0.8rem;
+    }
+    .role-impact-inner {
+      padding: 0.75rem;
+    }
+    .impact-text {
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+    .impact-action {
+      font-size: 0.72rem;
+      padding: 0.5rem 0.7rem;
+    }
+    .role-impact.open .role-impact-content {
+      max-height: 250px;
+    }
+  }
+
+  /* ── Very small phones (320px width) ── */
+  @media (max-width: 360px) {
+    .card-headline {
+      font-size: 1.3rem;
+    }
+    .card-summary {
+      font-size: 0.82rem;
+    }
+    .onboarding-logo {
+      font-size: 1.5rem;
+    }
+    .role-btn {
+      padding: 0.8rem 1rem;
+    }
+  }
+
+  /* ── Tall phones (notch/dynamic island safe area) ── */
+  @supports (padding-top: env(safe-area-inset-top)) {
+    .header {
+      padding-top: calc(0.75rem + env(safe-area-inset-top));
+    }
+    .card:first-child {
+      padding-top: calc(4.5rem + env(safe-area-inset-top));
+    }
+    .share-btn {
+      bottom: calc(1.5rem + env(safe-area-inset-bottom));
+    }
+    .scroll-hint {
+      bottom: calc(1.5rem + env(safe-area-inset-bottom));
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Onboarding -->
+<div class="onboarding" id="onboarding">
+  <div class="onboarding-logo">AI<span>Bites</span></div>
+  <p class="onboarding-sub">Today's AI news, bite-sized for your role. 30 seconds per story. Zero fluff.</p>
+  <p class="onboarding-label">I work as a</p>
+  <div class="role-buttons">
+    <button class="role-btn" data-role="dev" onclick="selectRole('dev')">
+      <div class="role-icon">⌨️</div>
+      <div class="role-meta">
+        <span class="role-title">Developer</span>
+        <span class="role-desc">Code, architecture, shipping</span>
+      </div>
+    </button>
+    <button class="role-btn" data-role="designer" onclick="selectRole('designer')">
+      <div class="role-icon">🎨</div>
+      <div class="role-meta">
+        <span class="role-title">Product Designer</span>
+        <span class="role-desc">UX, interfaces, user research</span>
+      </div>
+    </button>
+    <button class="role-btn" data-role="consultant" onclick="selectRole('consultant')">
+      <div class="role-icon">💼</div>
+      <div class="role-meta">
+        <span class="role-title">Consultant</span>
+        <span class="role-desc">Strategy, clients, problem-solving</span>
+      </div>
+    </button>
+    <button class="role-btn" data-role="marketer" onclick="selectRole('marketer')">
+      <div class="role-icon">📣</div>
+      <div class="role-meta">
+        <span class="role-title">Marketer</span>
+        <span class="role-desc">Growth, content, campaigns</span>
+      </div>
+    </button>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="header" id="header" style="display:none;">
+  <div>
+    <div class="header-logo">AI<span>Bites</span></div>
+    <div class="header-date" id="headerDate"></div>
+  </div>
+  <button class="header-role-badge" id="roleBadge" onclick="changeRole()"></button>
+</div>
+
+<!-- Scroll Progress -->
+<div class="scroll-progress" id="scrollProgress" style="display:none;"></div>
+
+<!-- Scroll Hint -->
+<div class="scroll-hint" id="scrollHint" style="display:none;">
+  <span class="scroll-hint-text">Swipe up</span>
+  <svg class="chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+</div>
+
+<!-- Feed -->
+<div class="feed-container" style="display:none;" id="feedContainer">
+  <div class="feed-scroll" id="feedScroll"></div>
+</div>
+
+<!-- WhatsApp Share FAB -->
+<button class="share-btn" id="shareBtn" onclick="shareWhatsApp()">
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</button>
+
+<script>
+const NEWS_DATA = [
+  {
+    tag: "BREAKING",
+    headline: "OpenAI Launches GPT-5 With Native Computer Use",
+    summary: "OpenAI's latest model can now control your browser and desktop apps directly, completing multi-step tasks like booking flights, filling forms, and managing files without human intervention. The feature, called 'Operator Mode,' works across Chrome, Mac, and Windows. Early testers report it can chain 15+ actions in sequence with 94% accuracy. It's available to Plus and Enterprise users starting today, with API access rolling out next week.",
+    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80",
+    source: "The Verge · 2 hours ago",
+    url: "https://theverge.com",
+    impact: {
+      dev: {
+        text: "Computer Use APIs mean you'll be building agent orchestration, not just API calls. Start learning about tool-use patterns, sandboxing, and state management for autonomous agents. This is the biggest architecture shift since APIs replaced screen scraping.",
+        action: "Spin up the GPT-5 computer use sandbox this week"
+      },
+      designer: {
+        text: "If an AI agent can navigate UIs autonomously, your design language needs to work for both humans AND machines. Expect a push toward more structured, semantic interfaces. Accessibility best practices are suddenly also agent-readiness best practices.",
+        action: "Audit your UI for machine-readable patterns and labels"
+      },
+      consultant: {
+        text: "Autonomous agents will reshape every client engagement you pitch. Workflows you're currently scoping at 3-month timelines could be 3-week agent deployments. Start learning agent capabilities now or your proposals will feel outdated by Q3.",
+        action: "Map one client workflow that an AI agent could handle end-to-end"
+      },
+      marketer: {
+        text: "The narrative just shifted from 'AI helps you work' to 'AI works for you.' Your competitor messaging needs to adapt. If your product isn't positioning against autonomous agents, you're already behind in the next wave of positioning.",
+        action: "Audit your landing page copy for 'AI assistant' language"
+      }
+    }
+  },
+  {
+    tag: "POLICY",
+    headline: "EU AI Act Enforcement Begins — First Fines Issued",
+    summary: "The European Union has issued its first penalties under the AI Act, fining a hiring platform €8.5M and a facial recognition startup €12M for deploying high-risk AI systems without mandatory documentation or human oversight. The European AI Board confirmed that over 140 investigations are currently underway across member states. Companies operating in the EU now have 90 days to submit compliance documentation or face additional penalties.",
+    image: "https://images.unsplash.com/photo-1529079446905-1a14e25d7c9f?w=800&q=80",
+    source: "Reuters · 5 hours ago",
+    url: "https://reuters.com",
+    impact: {
+      dev: {
+        text: "The fines were for lack of documentation and audit trails. This means logging, explainability, and model versioning are now production requirements, not nice-to-haves. If your ML pipeline doesn't have these, prioritize them.",
+        action: "Add model decision logging to your AI pipeline"
+      },
+      designer: {
+        text: "The AI Act mandates transparency in AI-driven decisions. Every AI-powered interface you design now needs clear disclosure of when AI is making or influencing decisions. Think consent flows, explanation layers, and opt-out mechanisms.",
+        action: "Design an AI transparency component for your design system"
+      },
+      consultant: {
+        text: "AI compliance is the next gold rush for consulting. Every company with EU exposure needs risk assessment, documentation, and governance frameworks. If you build this expertise now, you'll be the one clients call in 6 months.",
+        action: "Draft an AI compliance readiness assessment for your clients"
+      },
+      marketer: {
+        text: "Compliance is now a competitive advantage. If your company is ahead on AI governance, shout about it. 'EU AI Act compliant' is becoming the new 'GDPR compliant' trust badge that enterprise buyers look for.",
+        action: "Draft a compliance trust badge for your website"
+      }
+    }
+  },
+  {
+    tag: "PRODUCT",
+    headline: "Cursor Hits 1M Paid Users, Valued at $10B",
+    summary: "The AI-native code editor has crossed one million paying subscribers in under 18 months, with a new valuation of $10B after its Series C round led by a]6z. Cursor now processes over 30 million code completions daily and claims its users ship code 3x faster than traditional IDE users. VS Code's market share among professional developers dropped 8% in the same period, marking the fastest tool migration in developer history.",
+    image: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&q=80",
+    source: "TechCrunch · 8 hours ago",
+    url: "https://techcrunch.com",
+    impact: {
+      dev: {
+        text: "If you haven't tried Cursor or similar tools, you're leaving speed on the table. But more importantly, this signals that AI-native tools will replace traditional ones across every category. Think about what this means for the tools YOU build.",
+        action: "Try Cursor for one full day on your current project"
+      },
+      designer: {
+        text: "Cursor won because it reimagined the IDE from scratch with AI at the core, not bolted on. The same opportunity exists for design tools. Figma plugins aren't enough. The next Cursor-scale win in design hasn't been built yet. Pay attention.",
+        action: "List 5 design workflows that could be AI-native, not AI-assisted"
+      },
+      consultant: {
+        text: "A million paying users in 18 months with almost no sales team. This is the PLG case study your clients need to hear. If you're advising on go-to-market strategy, Cursor's growth model is the new benchmark for developer tools.",
+        action: "Build a Cursor PLG case study for your next client deck"
+      },
+      marketer: {
+        text: "A million paid users in 18 months with minimal traditional marketing. Cursor grew through developer word-of-mouth and Twitter demos. This is the PLG playbook on steroids, study how they did it.",
+        action: "Break down Cursor's growth flywheel for your next team sync"
+      }
+    }
+  },
+  {
+    tag: "RESEARCH",
+    headline: "Google DeepMind Cracks Protein-Drug Interaction Prediction",
+    summary: "Google DeepMind's new AlphaPharm model predicts how drugs interact with protein targets with 92.4% accuracy, up from the previous best of 67%. The model was trained on 200M molecular interactions and can evaluate 10,000 drug candidates in under an hour — a process that traditionally takes lab researchers 2-3 years. Pharma stocks surged 6% on the news, with Pfizer and Roche announcing licensing discussions with DeepMind.",
+    image: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&q=80",
+    source: "Nature · 12 hours ago",
+    url: "https://nature.com",
+    impact: {
+      dev: {
+        text: "DeepMind's approach used a novel architecture combining transformers with physics-informed neural networks. If you work with scientific or structured data, this hybrid approach is worth studying. Pure transformers aren't always the answer.",
+        action: "Read the DeepMind paper on physics-informed architectures"
+      },
+      designer: {
+        text: "AI is entering domains where the stakes are life and death. If you ever design for healthcare, biotech, or scientific tools, the trust layer in your UI matters more than ever. How do you design interfaces that let doctors trust an AI's drug prediction?",
+        action: "Study how medical AI tools handle trust and explainability in UI"
+      },
+      consultant: {
+        text: "This is a case study in AI eliminating entire business stages, not just optimizing them. Drug discovery timelines going from years to weeks means every industry has a similar disruption waiting. Help your clients find theirs before a competitor does.",
+        action: "Identify one process in your client's domain AI could skip entirely"
+      },
+      marketer: {
+        text: "This story will dominate mainstream tech press for days. If your company has any AI-in-healthcare angle, now is the time to insert yourself into the conversation with thought leadership content. The attention window is 48-72 hours.",
+        action: "Draft a hot take connecting this to your industry"
+      }
+    }
+  },
+  {
+    tag: "INDIA",
+    headline: "TCS Announces AI Upskilling for 600K Employees",
+    summary: "Tata Consultancy Services is rolling out mandatory AI training across its entire 600,000-strong workforce over the next 6 months. The program covers prompt engineering, AI tool integration, and AI-first project delivery. TCS CEO K Krithivasan stated that AI-trained teams have already shown 28% higher productivity in pilot programs. Infosys and Wipro are expected to announce similar initiatives within weeks, signaling an industry-wide shift in Indian IT.",
+    image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80",
+    source: "Economic Times · 3 hours ago",
+    url: "https://economictimes.com",
+    impact: {
+      dev: {
+        text: "The bar just moved. When 600K developers get AI tool training, 'I know how to use Copilot' stops being a differentiator. Focus on AI system design, not just AI tool usage. Architecture and judgment are your moat, not prompt skills.",
+        action: "Level up from AI tool user to AI system architect"
+      },
+      designer: {
+        text: "600K people are about to learn AI basics. That means 600K people who'll soon expect AI-native experiences in every product they use. The demand for designers who can design WITH and FOR AI is about to explode in the Indian market.",
+        action: "Add 'AI interaction design' projects to your portfolio"
+      },
+      consultant: {
+        text: "TCS just made your pitch for you. If the largest Indian IT company is mandating AI training, every mid-size firm will want the same but won't know how. AI upskilling strategy is a massive consulting opportunity in India right now.",
+        action: "Create an AI upskilling proposal template for mid-size IT firms"
+      },
+      marketer: {
+        text: "This signals massive enterprise demand for AI training and upskilling products in India. If you're marketing B2B tools, the 'AI-readiness' narrative resonates deeply with Indian enterprise buyers right now. Lead with the skilling angle.",
+        action: "Create an 'AI readiness assessment' lead magnet for Indian enterprises"
+      }
+    }
+  }
+];
+
+let currentRole = null;
+let currentCard = 0;
+
+function selectRole(role) {
+  currentRole = role;
+  const onboarding = document.getElementById('onboarding');
+  onboarding.classList.add('hidden');
+
+  setTimeout(() => {
+    onboarding.style.display = 'none';
+    document.getElementById('header').style.display = 'flex';
+    document.getElementById('feedContainer').style.display = 'block';
+    document.getElementById('scrollProgress').style.display = 'flex';
+    document.getElementById('scrollHint').style.display = 'flex';
+    setDate();
+    updateRoleBadge();
+    renderFeed();
+    initScrollTracking();
+  }, 400);
+}
+
+function changeRole() {
+  const roles = ['dev', 'designer', 'consultant', 'marketer'];
+  const idx = roles.indexOf(currentRole);
+  currentRole = roles[(idx + 1) % roles.length];
+  updateRoleBadge();
+  renderFeed();
+  // Maintain scroll position
+  const scroll = document.getElementById('feedScroll');
+  const cardH = scroll.children[0]?.offsetHeight || window.innerHeight;
+  scroll.scrollTo(0, currentCard * cardH);
+}
+
+function updateRoleBadge() {
+  const badge = document.getElementById('roleBadge');
+  const labels = { dev: 'DEV', designer: 'DESIGN', consultant: 'CONSULT', marketer: 'MKT' };
+  badge.textContent = labels[currentRole];
+  badge.setAttribute('data-role', currentRole);
+}
+
+function setDate() {
+  const d = new Date();
+  const opts = { weekday: 'long', month: 'short', day: 'numeric' };
+  document.getElementById('headerDate').textContent = d.toLocaleDateString('en-IN', opts);
+}
+
+function renderFeed() {
+  const feed = document.getElementById('feedScroll');
+  feed.innerHTML = '';
+
+  NEWS_DATA.forEach((item, i) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <span class="card-counter">${i+1}/${NEWS_DATA.length}</span>
+      <div class="card-content">
+        ${item.image ? `<div class="card-image"><img src="${item.image}" alt="" loading="lazy"></div>` : ''}
+        <div class="card-text">
+          <div class="card-tag">
+            <span class="card-tag-dot"></span>
+            ${item.tag}
+          </div>
+          <h1 class="card-headline">${item.headline}</h1>
+          <p class="card-summary">${item.summary}</p>
+          <p class="card-source">
+            ${item.source}
+            <a href="${item.url}" target="_blank" rel="noopener" class="card-source-link">Read ↗</a>
+          </p>
+        </div>
+      </div>
+      <div class="role-impact" id="impact-${i}">
+        <button class="role-impact-toggle" data-role="${currentRole}" onclick="toggleImpact(${i})">
+          <span class="toggle-left">
+            <span class="role-dot"></span>
+            What this means for you
+          </span>
+          <span class="toggle-arrow">▾</span>
+        </button>
+        <div class="role-impact-content">
+          <div class="role-impact-inner">
+            <p class="impact-text">${item.impact[currentRole].text}</p>
+            <div class="impact-action" data-role="${currentRole}">
+              ⚡ ${item.impact[currentRole].action}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    feed.appendChild(card);
+  });
+
+  // End card
+  const endCard = document.createElement('div');
+  endCard.className = 'end-card';
+  endCard.innerHTML = `
+    <div class="end-card-logo">AI<span>Bites</span></div>
+    <p class="end-card-msg">That's today's bite. Know someone who'd find this useful? Share it.</p>
+    <button class="end-share-btn" onclick="shareWhatsApp()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Share on WhatsApp
+    </button>
+    <p class="end-sub">Come back tomorrow for your next bite</p>
+  `;
+  feed.appendChild(endCard);
+
+  // Show share FAB
+  document.getElementById('shareBtn').style.display = 'flex';
+
+  // Render scroll dots
+  const prog = document.getElementById('scrollProgress');
+  prog.innerHTML = NEWS_DATA.map((_, i) =>
+    `<div class="scroll-dot ${i === 0 ? 'active' : ''}" id="dot-${i}"></div>`
+  ).join('');
+}
+
+function toggleImpact(idx) {
+  const el = document.getElementById(`impact-${idx}`);
+  el.classList.toggle('open');
+}
+
+function initScrollTracking() {
+  const scroll = document.getElementById('feedScroll');
+  const hint = document.getElementById('scrollHint');
+  let hintHidden = false;
+
+  scroll.addEventListener('scroll', () => {
+    if (!hintHidden) {
+      hint.classList.add('hidden');
+      hintHidden = true;
+    }
+
+    const cardH = scroll.children[0]?.offsetHeight || window.innerHeight;
+    const newCard = Math.round(scroll.scrollTop / cardH);
+
+    if (newCard !== currentCard) {
+      currentCard = newCard;
+      document.querySelectorAll('.scroll-dot').forEach((d, i) => {
+        d.classList.toggle('active', i === currentCard);
+      });
+    }
+  });
+}
+
+function shareWhatsApp() {
+  const url = window.location.href;
+  const text = `AI Bites — today's AI news, bite-sized for your role. Takes 2 mins. Check it out 👇\n${url}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+</script>
+</body>
+</html>
